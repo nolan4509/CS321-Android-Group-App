@@ -25,16 +25,16 @@
                 android:text="@string/weatherButton"
                 style="?android:attr/borderlessButtonStyle"/>
 
-            <Button
-                android:id="@+id/CalendarButton"
-                android:layout_width="match_parent"
-                android:layout_height="250dp"
-                android:layout_alignParentEnd="true"
-                android:layout_alignParentStart="true"
-                android:layout_below="@+id/WeatherButton"
-                android:layout_gravity="center"
-                android:text="@string/calendarButton"
-                style="?android:attr/borderlessButtonStyle"/>
+        <TextView
+            android:id="@+id/CalendarButton"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/WeatherButton"
+            android:layout_gravity="center"
+            android:text="@string/calendarButton"
+            style="?android:attr/borderlessButtonStyle"/>
 
             <Button
                 android:id="@+id/AlarmButton"
