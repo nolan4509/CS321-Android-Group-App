@@ -50,7 +50,7 @@ public class ProcessJSON {
             System.err.println("[!!] Error getting Key!!");
             System.err.println(e);
         }
-        System.out.println(locKey);
+        //System.out.println(locKey);
         return locKey;
     }
 
@@ -88,7 +88,7 @@ public class ProcessJSON {
                 else if(next == JsonToken.BEGIN_ARRAY) rdr.beginArray();
                 else if(next == JsonToken.NAME) {
                     String name = rdr.nextName();
-                    System.out.println(name);
+                    //System.out.println(name);
                     if (name.equals(match)) return;
                     else rdr.skipValue();
                 }
