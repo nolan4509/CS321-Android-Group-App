@@ -23,7 +23,7 @@
         android:id="@+id/sun"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/sun"/>
+        android:text="@string/sun" />
     <CheckBox
         android:id="@+id/mon"
         android:layout_width="wrap_content"

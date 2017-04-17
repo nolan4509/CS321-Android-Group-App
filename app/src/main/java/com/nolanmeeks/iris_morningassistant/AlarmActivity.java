@@ -38,6 +38,7 @@ public class AlarmActivity extends AppCompatActivity {
 
             String days[] = alarm.days.split(",");
             for(String day : days) {
+                day = day.trim();
                 switch ((day)) {
                     case "S":
                         ((CheckBox)findViewById(R.id.sun)).setChecked(true);

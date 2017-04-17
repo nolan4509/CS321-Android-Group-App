@@ -38,23 +38,27 @@
             android:visibility="gone"
             style="?android:attr/borderlessButtonStyle"
             >
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="300dp"
                 android:layout_height="wrap_content"
-                android:layout_gravity="top|left"
-                android:text="@string/alarmButton"
-                android:textSize="80sp"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|left"
-                android:textAlignment="gravity"
-                android:text="@string/alarmButton"
-                android:textSize="20sp"/>
+                >
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/alarmButton"
+                    android:textSize="80sp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/alarmButton"
+                    android:textSize="20sp"/>
+            </LinearLayout>
             <ToggleButton
+                android:layout_width="80dp"
                 android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:layout_gravity="right|top"/>
+                android:layout_gravity="end|center"
+                />
             </TableRow>
         </LinearLayout>
     </android.support.v4.widget.NestedScrollView>

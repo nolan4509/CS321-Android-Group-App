@@ -301,10 +301,13 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         TableRow alarm = new TableRow(this);
         TableRow original = (TableRow)findViewById(R.id.AlarmButton);
 
-        TextView otime = (TextView)original.getChildAt(0);
-        TextView oweek = (TextView)original.getChildAt(1);
-        ToggleButton ostate = (ToggleButton)original.getChildAt(2);
+        LinearLayout olayout = (LinearLayout)original.getChildAt(0);
+        LinearLayout layout = new LinearLayout(this);
+        layout.setLayoutParams(olayout.getLayoutParams());
 
+        TextView otime = (TextView)olayout.getChildAt(0);
+        TextView oweek = (TextView)olayout.getChildAt(1);
+        ToggleButton ostate = (ToggleButton)original.getChildAt(1);
 
         TextView time = new TextView(this);
         time.setTextSize(80);
@@ -328,9 +331,11 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         week.setText(d.days);
 
 
-        alarm.addView(time,0);
-        alarm.addView(week,1);
-        alarm.addView(state,2);
+        layout.addView(time);
+        layout.addView(week);
+
+        alarm.addView(layout,0);
+        alarm.addView(state,1);
         alarm.setId(d.Alarm_id*100);
 
         if(d.status) {
