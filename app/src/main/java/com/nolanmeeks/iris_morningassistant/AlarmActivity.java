@@ -139,10 +139,10 @@ public class AlarmActivity extends AppCompatActivity {
     }
 
     static void addAlarmToDatabase(String hour, String minute, String days) {
-        String insert = String.format("INSERT INTO %s(%s,%s,%s) VALUES('%s','%s','%s')",
+        String insert = String.format("INSERT INTO %s(%s,%s,%s,%s) VALUES('%s','%s','%s',%d)",
                 AlarmsOpenHelper.TABLE_NAME, AlarmsOpenHelper.COLUMN_HOUR,
-                AlarmsOpenHelper.COLUMN_MINUTE, AlarmsOpenHelper.COLUMN_DAYS,
-                hour, minute, days);
+                AlarmsOpenHelper.COLUMN_MINUTE, AlarmsOpenHelper.COLUMN_DAYS,AlarmsOpenHelper.COLUMN_STATUS,
+                hour, minute, days,1);
         System.out.println(insert);
         HomeScreen.db.execSQL(insert);
     }

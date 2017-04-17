@@ -47,6 +47,7 @@
             android:label="@string/title_activity_settings" />
         <receiver android:name=".Alarm_Receiver" >
         </receiver>
+        <service android:name=".RingtonePlayingService"/>
 
     </application>
 

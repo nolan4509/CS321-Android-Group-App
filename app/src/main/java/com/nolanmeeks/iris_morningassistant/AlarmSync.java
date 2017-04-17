@@ -83,7 +83,9 @@ class AlarmData {
     String days;
     int Alarm_id;
     public AlarmData(String t, Boolean s, String w, int id) {
-        time =t;
+        int hour = Integer.parseInt(t.split(":")[0]);
+        int min = Integer.parseInt(t.split(":")[1]);
+        time =String.format("%02d:%02d",hour,min);
         status = s;
         days = w;
         Alarm_id = id;

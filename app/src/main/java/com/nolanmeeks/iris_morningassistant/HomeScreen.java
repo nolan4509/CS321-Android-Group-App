@@ -39,6 +39,7 @@ import android.widget.ToggleButton;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.calendar.CalendarScopes;
+import com.google.common.collect.Table;
 
 import org.w3c.dom.Text;
 
@@ -315,15 +316,27 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
 
         ToggleButton state = new ToggleButton(this);
         state.setLayoutParams(ostate.getLayoutParams());
+        state.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(((ToggleButton)v).isChecked()) toggleOn(v);
+                else toggleOff(v);
+            }
+        });
 
         time.setText(d.time);
         week.setText(d.days);
-        state.setChecked(d.status);
+
 
         alarm.addView(time,0);
         alarm.addView(week,1);
         alarm.addView(state,2);
         alarm.setId(d.Alarm_id*100);
+
+        if(d.status) {
+            state.setChecked(true);
+            toggleOn(state);
+        }
 
         alarm.setLayoutParams(original.getLayoutParams());
         alarm.setClickable(true);
@@ -338,45 +351,49 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
 
         lay.addView(alarm);
     }
+    private PendingIntent create(AlarmData d, boolean on) {
+        Intent intent = new Intent(this.getApplicationContext(), Alarm_Receiver.class);
+        intent.putExtra("id", d.Alarm_id);
+        if(on) intent.putExtra("extra", "alarm on");
+        else intent.putExtra("extra", "alarm off");
+        intent.putExtra("choice", 2);
+        PendingIntent sender = PendingIntent.getBroadcast(this, d.Alarm_id, intent, 0);
+        return sender;
+    }
 
-    private void toggleAlarm(View v) {
+    private void toggleOff(View v) {
+        TableRow alarm =(TableRow) v.getParent();
+        AlarmData d = AlarmActivity.getAlarm(alarm.getId()/100);
+        PendingIntent sender = create(d,false);
+
+        Intent service_intent = new Intent(this, RingtonePlayingService.class);
+        service_intent.putExtra("extra", "alarm off");
+        service_intent.putExtra("choice", 0);
+        startService(service_intent);
+
+        alarmManager.cancel(sender);
+        System.out.println("Disabled the Alarm");
+    }
+
+    private void toggleOn(View v) {
         //Not done still working on it
-        AlarmData d = AlarmActivity.getAlarm(v.getId()/100);
+        TableRow alarm =(TableRow) v.getParent();
+        AlarmData d = AlarmActivity.getAlarm(alarm.getId()/100);
+        PendingIntent sender = create(d, true);
+
         Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(System.currentTimeMillis());
-        calendar.set(Calendar.HOUR_OF_DAY, 8);
-        calendar.set(Calendar.MINUTE, 30);
 
-        String days[] = d.days.split(",");
-        for(String day : days) {
-            int day_num;
-            switch (day) {
-                case "S":
-                    day_num = Calendar.SUNDAY;
-                    break;
-                case "M":
-                    day_num = Calendar.MONDAY;
-                    break;
-                case "T":
-                    day_num = Calendar.TUESDAY;
-                    break;
-                case "W":
-                    day_num = Calendar.WEDNESDAY;
-                    break;
-                case "Th":
-                    day_num = Calendar.THURSDAY;
-                    break;
-                case "F":
-                    day_num = Calendar.FRIDAY;
-                    break;
-                default:
-                    day_num = Calendar.SATURDAY;
-                    break;
+        if(d.days == "") calendar.setTimeInMillis(System.currentTimeMillis());
+        else {
 
-            }
-            calendar.setTime(new Date(Calendar.YEAR,
-                    Calendar.WEEK_OF_YEAR,day_num));
         }
+        calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(d.time.split(":")[0]));
+        calendar.set(Calendar.MINUTE, Integer.parseInt(d.time.split(":")[1]));
+        calendar.set(Calendar.SECOND, 0);
+
+        System.out.println("Setting the Alarm for "+ (new Date(calendar.getTimeInMillis())));
+        alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), sender);
+
     }
 
     public void displayWeather() {
