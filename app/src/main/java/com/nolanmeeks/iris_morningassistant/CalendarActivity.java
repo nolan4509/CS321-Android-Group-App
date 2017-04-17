@@ -284,23 +284,22 @@ public class CalendarActivity extends Activity
 
     /**
      * An asynchronous task that handles the Google Calendar API call.
-     * Placing the API calls in their own task ensures the UI stays responsive.
      */
     public static class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
         private com.google.api.services.calendar.Calendar mService = null;
         private Exception mLastError = null;
         private DateTime selectedDate;
-        //private Long selectedDayInMillis;
         private Date daySelect;
         private ProgressDialog mProgress;
         private TextView mOutputText;
 
+        //Request Task that accepts account information & the day we need events from
+        //assign the value for "daySelected": the date we need to get
         MakeRequestTask(GoogleAccountCredential credential, TextView textView,
                         ProgressDialog progressDialog, Date daySelected) {
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
             JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
             if (daySelected != null) {
-                //selectedDayInMillis = dayInMillis;
                 daySelect = daySelected;
                 selectedDate = new DateTime(new Date(daySelected.getYear(), daySelected.getMonth(), daySelected.getDate()));
             }
@@ -314,7 +313,6 @@ public class CalendarActivity extends Activity
 
         /**
          * Background task to call Google Calendar API.
-         * @param params no parameters needed for this task.
          */
         @Override
         protected List<String> doInBackground(Void... params) {
@@ -330,23 +328,28 @@ public class CalendarActivity extends Activity
         /**
          * Fetch a list of the next 10 events from the primary calendar.
          * @return List of Strings describing returned events.
-         * @throws IOException
          */
         private List<String> getDataFromApi() throws IOException {
-            // List the next 10 events from the primary calendar.
+            //check if we clicked on a date, or we should use the current time to get events
+            //for the next 24 hrs
             Date d = new Date(System.currentTimeMillis());
+            DateTime tomorrow = null;
             if (selectedDate == null) {
-
-                //selectedDayInMillis = java.util.Calendar.set(Calendar.YEAR, Calendar.MONTH, Calendar.DATE);//System.currentTimeMillis();
-                daySelect = new Date(d.getYear(), d.getMonth(), d.getDate());
+                //daySelect = new Date(d.getYear(), d.getMonth(), d.getDate());
+                daySelect = new Date(d.getTime());
                 selectedDate = new DateTime(daySelect);//selectedDayInMillis);
+                tomorrow = new DateTime(d.getTime()+86400000);
             }
-            //DateTime tomorrow = new DateTime(selectedDayInMillis+86400000);
+
+            //set upper time limit of event as 24 hours from now
+            if (tomorrow == null) {
+                tomorrow = new DateTime(new Date(daySelect.getYear(), daySelect.getMonth(), daySelect.getDate() + 1));
+            }
+            Log.d("check dates_tomorrow", tomorrow.toString());
             Log.d("check dates", daySelect.toString());
             Log.d("check dates_selected", selectedDate.toString());
 
-            DateTime tomorrow = new DateTime(new Date(daySelect.getYear(), daySelect.getMonth(), daySelect.getDate()+1));
-            Log.d("check dates_tomorrow", tomorrow.toString());
+            //List of 10 event result strings
             List<String> eventStrings = new ArrayList<String>();
             Events events = mService.events().list("primary")
                     .setMaxResults(10)
@@ -388,18 +391,18 @@ public class CalendarActivity extends Activity
 
         @Override
         protected void onPostExecute(List<String> output) {
-            mProgress.hide();
+            mProgress.dismiss();
             if (output == null || output.size() == 0) {
                 mOutputText.setText("No results returned.");
             } else {
-                output.add(0, "Todays Events:");
+                output.add(0, "Upcoming Events:");
                 mOutputText.setText(TextUtils.join("\n", output));
             }
         }
 
         @Override
         protected void onCancelled() {
-            mProgress.hide();
+            mProgress.dismiss();
             if (mLastError != null) {
                 if (mLastError instanceof GooglePlayServicesAvailabilityIOException) {
 //                    showGooglePlayServicesAvailabilityErrorDialog(
