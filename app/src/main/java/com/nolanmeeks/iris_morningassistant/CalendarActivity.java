@@ -38,9 +38,8 @@ import android.widget.CalendarView;
 import android.widget.TextView;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.Calendar;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -53,7 +52,6 @@ public class CalendarActivity extends Activity
     private TextView mOutputText;
     ProgressDialog mProgress;
     private CalendarView mCalendarView;
-    Context context = this;
 
     static final int REQUEST_ACCOUNT_PICKER = 1000;
     static final int REQUEST_AUTHORIZATION = 1001;
@@ -85,7 +83,7 @@ public class CalendarActivity extends Activity
         mCalendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
             @Override
             public void onSelectedDayChange(@NonNull CalendarView view, int year, int month, int dayOfMonth) {
-                getResultsFromApi(mCredential, mProgress, mOutputText, view.getDate());
+                getResultsFromApi(mCredential, mProgress, mOutputText, new Date(view.getDate()));
             }
         });
 
@@ -107,7 +105,7 @@ public class CalendarActivity extends Activity
     public void getResultsFromApi(GoogleAccountCredential credentials,
                                   ProgressDialog dialog,
                                   TextView textView,
-                                  Long dayInMillis) {
+                                  Date daySelected) {
 //        if (! isGooglePlayServicesAvailable()) {
 //            acquireGooglePlayServices();
 //        } else
@@ -117,7 +115,7 @@ public class CalendarActivity extends Activity
         } else if (! isDeviceOnline()) {
             textView.setText("No network connection available.");
         } else {
-            new MakeRequestTask(credentials, textView, dialog, dayInMillis).execute();
+            new MakeRequestTask(credentials, textView, dialog, daySelected).execute();
         }
     }
 
@@ -286,23 +284,24 @@ public class CalendarActivity extends Activity
 
     /**
      * An asynchronous task that handles the Google Calendar API call.
-     * Placing the API calls in their own task ensures the UI stays responsive.
      */
     public static class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
         private com.google.api.services.calendar.Calendar mService = null;
         private Exception mLastError = null;
         private DateTime selectedDate;
-        private Long selectedDayInMillis;
+        private Date daySelect;
         private ProgressDialog mProgress;
         private TextView mOutputText;
 
+        //Request Task that accepts account information & the day we need events from
+        //assign the value for "daySelected": the date we need to get
         MakeRequestTask(GoogleAccountCredential credential, TextView textView,
-                        ProgressDialog progressDialog, Long dayInMillis) {
+                        ProgressDialog progressDialog, Date daySelected) {
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
             JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-            if (dayInMillis != null) {
-                selectedDayInMillis = dayInMillis;
-                selectedDate = new DateTime(selectedDayInMillis);
+            if (daySelected != null) {
+                daySelect = daySelected;
+                selectedDate = new DateTime(new Date(daySelected.getYear(), daySelected.getMonth(), daySelected.getDate()));
             }
             mService = new com.google.api.services.calendar.Calendar.Builder(
                     transport, jsonFactory, credential)
@@ -314,7 +313,6 @@ public class CalendarActivity extends Activity
 
         /**
          * Background task to call Google Calendar API.
-         * @param params no parameters needed for this task.
          */
         @Override
         protected List<String> doInBackground(Void... params) {
@@ -330,15 +328,28 @@ public class CalendarActivity extends Activity
         /**
          * Fetch a list of the next 10 events from the primary calendar.
          * @return List of Strings describing returned events.
-         * @throws IOException
          */
         private List<String> getDataFromApi() throws IOException {
-            // List the next 10 events from the primary calendar.
-            if (selectedDayInMillis == null) {
-                selectedDayInMillis = System.currentTimeMillis();
-                selectedDate = new DateTime(selectedDayInMillis);
+            //check if we clicked on a date, or we should use the current time to get events
+            //for the next 24 hrs
+            Date d = new Date(System.currentTimeMillis());
+            DateTime tomorrow = null;
+            if (selectedDate == null) {
+                //daySelect = new Date(d.getYear(), d.getMonth(), d.getDate());
+                daySelect = new Date(d.getTime());
+                selectedDate = new DateTime(daySelect);//selectedDayInMillis);
+                tomorrow = new DateTime(d.getTime()+86400000);
             }
-            DateTime tomorrow = new DateTime(selectedDayInMillis+86400000);
+
+            //set upper time limit of event as 24 hours from now
+            if (tomorrow == null) {
+                tomorrow = new DateTime(new Date(daySelect.getYear(), daySelect.getMonth(), daySelect.getDate() + 1));
+            }
+            Log.d("check dates_tomorrow", tomorrow.toString());
+            Log.d("check dates", daySelect.toString());
+            Log.d("check dates_selected", selectedDate.toString());
+
+            //List of 10 event result strings
             List<String> eventStrings = new ArrayList<String>();
             Events events = mService.events().list("primary")
                     .setMaxResults(10)
@@ -350,7 +361,7 @@ public class CalendarActivity extends Activity
             List<Event> items = events.getItems();
 
             for (Event event : items) {
-                Log.d("Checking_items", event.toPrettyString());
+                //Log.d("Checking_items", event.toPrettyString());
                 DateTime start = event.getStart().getDateTime();
                 DateTime end = event.getEnd().getDateTime();
 
@@ -380,18 +391,18 @@ public class CalendarActivity extends Activity
 
         @Override
         protected void onPostExecute(List<String> output) {
-            mProgress.hide();
+            mProgress.dismiss();
             if (output == null || output.size() == 0) {
                 mOutputText.setText("No results returned.");
             } else {
-                output.add(0, "Todays Events:");
+                output.add(0, "Upcoming Events:");
                 mOutputText.setText(TextUtils.join("\n", output));
             }
         }
 
         @Override
         protected void onCancelled() {
-            mProgress.hide();
+            mProgress.dismiss();
             if (mLastError != null) {
                 if (mLastError instanceof GooglePlayServicesAvailabilityIOException) {
 //                    showGooglePlayServicesAvailabilityErrorDialog(
