@@ -2,10 +2,13 @@ package com.nolanmeeks.iris_morningassistant;
 
 import android.Manifest;
 import android.accounts.AccountManager;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Geocoder;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -26,14 +29,24 @@ import android.support.design.widget.Snackbar;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.calendar.CalendarScopes;
+import com.google.common.collect.Table;
 
+import org.w3c.dom.Text;
+
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 
@@ -79,6 +92,11 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
     private ProgressDialog mProgress;
     GoogleAccountCredential mCredential;
 
+    //Alarm Stuff
+    static AlarmsOpenHelper help;
+    static SQLiteDatabase db;
+    public static AlarmManager alarmManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,6 +108,12 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         weatherButton.setOnClickListener(this);
         locationSetup();
         displayWeather();
+
+        //Alarm
+        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        initDatabase();
+        displayAlarm();
+        //(findViewById(R.id.AlarmButton)).setVisibility(View.INVISIBLE);
 
         //display calendar events of today
         calendarButton = (TextView) findViewById(R.id.CalendarButton);
@@ -108,11 +132,6 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         }
 
         calendarButton.setOnClickListener(this);
-
-
-
-        Button alarmButton = (Button) findViewById(R.id.AlarmButton);
-        alarmButton.setOnClickListener(this);
 
         rootLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
 
@@ -151,7 +170,7 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
             @Override
             public void onClick(View v) {
                 Toast.makeText(getApplication(), "Floating Action Button 1", Toast.LENGTH_SHORT).show();
-                Intent newAlarm = new Intent(HomeScreen.this, newAlarm.class);
+                Intent newAlarm = new Intent(HomeScreen.this, AlarmActivity.class);
                 startActivity(newAlarm);
             }
         });
@@ -189,16 +208,8 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
                 Intent calendarIntent = new Intent(HomeScreen.this, CalendarActivity.class);
                 startActivity(calendarIntent);
                 break;
-
-            // Start Alarm Activity
-            case R.id.AlarmButton:
-                // Start Alarm
-                Intent alarmIntent = new Intent(HomeScreen.this, AlarmActivity.class);
-                startActivity(alarmIntent);
-                break;
-
-
             default:
+
                 break;
         }
 
@@ -264,6 +275,157 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         fab3.setLayoutParams(layoutParams3);
         fab3.startAnimation(hide_fab_3);
         fab3.setClickable(false);
+    }
+
+    void initDatabase() {
+        System.out.println("Here");
+        help = new AlarmsOpenHelper(getApplicationContext());
+        db = help.getWritableDatabase();
+    }
+
+    public void displayAlarm(){
+        //AlarmActivity.
+        AsyncTask a = new AlarmSync().execute("");
+        try {
+            ArrayList<AlarmData> data = (ArrayList<AlarmData>)a.get();
+            for(AlarmData alarm : data) {
+                createNewAlarm(alarm);
+            }
+        } catch (Exception e) {
+            System.err.println(e);
+        }
+    }
+
+    void createNewAlarm(AlarmData d) {
+        LinearLayout lay = (LinearLayout)findViewById(R.id.main_layout);
+        TableRow alarm = new TableRow(this);
+        TableRow original = (TableRow)findViewById(R.id.AlarmButton);
+
+        LinearLayout olayout = (LinearLayout)original.getChildAt(0);
+        LinearLayout layout = new LinearLayout(this);
+        layout.setLayoutParams(olayout.getLayoutParams());
+
+        TextView otime = (TextView)olayout.getChildAt(0);
+        TextView oweek = (TextView)olayout.getChildAt(1);
+        ToggleButton ostate = (ToggleButton)original.getChildAt(1);
+
+        TextView time = new TextView(this);
+        time.setTextSize(80);
+        time.setLayoutParams(otime.getLayoutParams());
+
+        TextView week = new TextView(this);
+        week.setTextSize(20);
+        week.setLayoutParams(oweek.getLayoutParams());
+
+        ToggleButton state = new ToggleButton(this);
+        state.setLayoutParams(ostate.getLayoutParams());
+        state.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(((ToggleButton)v).isChecked()) toggleOn(v);
+                else toggleOff(v);
+            }
+        });
+
+        time.setText(d.time);
+        week.setText(d.days);
+
+
+        layout.addView(time);
+        layout.addView(week);
+
+        alarm.addView(layout,0);
+        alarm.addView(state,1);
+        alarm.setId(d.Alarm_id*100);
+
+        if(d.status) {
+            state.setChecked(true);
+            toggleOn(state);
+        }
+
+        alarm.setLayoutParams(original.getLayoutParams());
+        alarm.setClickable(true);
+        alarm.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent next = new Intent(HomeScreen.this,AlarmActivity.class);
+                next.putExtra("id", v.getId()/100);
+                startActivity(next);
+            }
+        });
+
+        lay.addView(alarm);
+    }
+    private PendingIntent create(AlarmData d, boolean on) {
+        Intent intent = new Intent(this.getApplicationContext(), Alarm_Receiver.class);
+        intent.putExtra("id", d.Alarm_id);
+        if(on) intent.putExtra("extra", "alarm on");
+        else intent.putExtra("extra", "alarm off");
+        intent.putExtra("choice", 2);
+        PendingIntent sender = PendingIntent.getBroadcast(this, d.Alarm_id, intent, 0);
+        return sender;
+    }
+
+    private void toggleOff(View v) {
+        TableRow alarm =(TableRow) v.getParent();
+        AlarmData d = AlarmActivity.getAlarm(alarm.getId()/100);
+        PendingIntent sender = create(d,false);
+
+        Intent service_intent = new Intent(this, RingtonePlayingService.class);
+        service_intent.putExtra("extra", "alarm off");
+        service_intent.putExtra("choice", 0);
+        startService(service_intent);
+
+        alarmManager.cancel(sender);
+        System.out.println("Disabled the Alarm");
+    }
+
+    private void toggleOn(View v) {
+        //Not done still working on it
+        TableRow alarm =(TableRow) v.getParent();
+        AlarmData d = AlarmActivity.getAlarm(alarm.getId()/100);
+        PendingIntent sender = create(d, true);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(d.time.split(":")[0]));
+        calendar.set(Calendar.MINUTE, Integer.parseInt(d.time.split(":")[1]));
+        calendar.set(Calendar.SECOND, 0);
+
+        int today = (new Date()).getDay()+1; //starts at 0...
+
+        int nextDay = today;
+        for(String day : d.days.split(",")) {
+         switch(day.trim()) {
+             case "S":
+                 nextDay = Calendar.SUNDAY;
+                 break;
+             case "M":
+                 nextDay = Calendar.MONDAY;
+                 break;
+             case "T":
+                 nextDay = Calendar.TUESDAY;
+                 break;
+             case "W":
+                 nextDay = Calendar.WEDNESDAY;
+                 break;
+             case "Th":
+                 nextDay = Calendar.THURSDAY;
+                 break;
+             case "F":
+                 nextDay = Calendar.FRIDAY;
+                 break;
+             case "Sa":
+                 nextDay = Calendar.SATURDAY;
+         }
+         if(today == nextDay && calendar.getTimeInMillis() < System.currentTimeMillis())continue;
+         if (today <= nextDay) break;
+        }
+        if(calendar.getTimeInMillis() < System.currentTimeMillis()) calendar.add(Calendar.WEEK_OF_YEAR, 1);
+        else calendar.add(Calendar.DAY_OF_WEEK, nextDay-today);
+        System.out.println("Setting the Alarm for "+ (new Date(calendar.getTimeInMillis())));
+        alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), sender);
+
     }
 
     public void displayWeather() {

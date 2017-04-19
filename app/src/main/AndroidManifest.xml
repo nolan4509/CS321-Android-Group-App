@@ -41,12 +41,12 @@
         <activity android:name=".CalendarActivity" />
         <activity android:name=".newCalEvent" />
         <activity android:name=".AlarmActivity" />
-        <activity android:name=".newAlarm" />
         <activity
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings" />
         <receiver android:name=".Alarm_Receiver" >
         </receiver>
+        <service android:name=".RingtonePlayingService"/>
 
     </application>
 

@@ -13,7 +13,16 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_settings">Settings</string>
 
+
     <!-- Strings related to Settings -->
+
+    <string name="sun">Sunday</string>
+    <string name="mon">Monday</string>
+    <string name="tues">Tuesday</string>
+    <string name="wed">Wednesday</string>
+    <string name="thur">Thursday</string>
+    <string name="fri">Friday</string>
+    <string name="sat">Saturday</string>
 
     <!-- Example General settings -->
     <string name="pref_header_general">General</string>
