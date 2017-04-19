@@ -387,15 +387,42 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         PendingIntent sender = create(d, true);
 
         Calendar calendar = Calendar.getInstance();
-
-        if(d.days == "") calendar.setTimeInMillis(System.currentTimeMillis());
-        else {
-
-        }
+        calendar.setTimeInMillis(System.currentTimeMillis());
         calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(d.time.split(":")[0]));
         calendar.set(Calendar.MINUTE, Integer.parseInt(d.time.split(":")[1]));
         calendar.set(Calendar.SECOND, 0);
 
+        int today = (new Date()).getDay()+1; //starts at 0...
+
+        int nextDay = today;
+        for(String day : d.days.split(",")) {
+         switch(day.trim()) {
+             case "S":
+                 nextDay = Calendar.SUNDAY;
+                 break;
+             case "M":
+                 nextDay = Calendar.MONDAY;
+                 break;
+             case "T":
+                 nextDay = Calendar.TUESDAY;
+                 break;
+             case "W":
+                 nextDay = Calendar.WEDNESDAY;
+                 break;
+             case "Th":
+                 nextDay = Calendar.THURSDAY;
+                 break;
+             case "F":
+                 nextDay = Calendar.FRIDAY;
+                 break;
+             case "Sa":
+                 nextDay = Calendar.SATURDAY;
+         }
+         if(today == nextDay && calendar.getTimeInMillis() < System.currentTimeMillis())continue;
+         if (today <= nextDay) break;
+        }
+        if(calendar.getTimeInMillis() < System.currentTimeMillis()) calendar.add(Calendar.WEEK_OF_YEAR, 1);
+        else calendar.add(Calendar.DAY_OF_WEEK, nextDay-today);
         System.out.println("Setting the Alarm for "+ (new Date(calendar.getTimeInMillis())));
         alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), sender);
 

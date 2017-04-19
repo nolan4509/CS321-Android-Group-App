@@ -1,38 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/PopUpView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/AlarmStuff"
     android:orientation="vertical"
-    android:fitsSystemWindows="true"
-    tools:context="com.nolanmeeks.iris_morningassistant.AlarmActivity">
-
-
-    <TimePicker
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="0dp"
-        android:layout_gravity="center_horizontal"
-        android:id="@+id/timePicker" />
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Repeat Alarm?"
-        android:onClick="popup"
-        android:id="@+id/repeat"/>
-    <Space
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/default_gap" />
-    <LinearLayout
-        android:id="@+id/popup"
-        android:visibility="gone"
-        android:layout_gravity="center_horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:orientation="vertical"
-        android:layout_weight="3">
+    android:layout_gravity="center_horizontal">
         <CheckBox
             android:id="@+id/sun"
             android:layout_width="match_parent"
@@ -68,21 +40,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/sat"/>
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/dismissPopup"/>
     </LinearLayout>
-
-    <Button
-        android:id="@+id/CRUD_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="onClick"
-        android:layout_gravity="bottom"
-        android:text="Update Alarm"/>
-    <Button
-        android:id="@+id/delete"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="deleteAlarm"
-        android:layout_gravity="bottom"
-        android:background="@color/colorPrimaryDark"
-        android:text="Delete Alarm"/>
-</LinearLayout>
