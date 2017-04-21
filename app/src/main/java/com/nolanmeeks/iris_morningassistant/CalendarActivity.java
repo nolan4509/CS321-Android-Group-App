@@ -61,10 +61,7 @@ public class CalendarActivity extends Activity
     private static final String PREF_ACCOUNT_NAME = "accountName";
     private static final String[] SCOPES = { CalendarScopes.CALENDAR_READONLY };
 
-    /**
-     * Create the main activity.
-     * @param savedInstanceState previously saved instance data.
-     */
+ //Creates main screen and auto loads calendar events for the next 24 hrs
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,7 +80,10 @@ public class CalendarActivity extends Activity
         mCalendarView.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
             @Override
             public void onSelectedDayChange(@NonNull CalendarView view, int year, int month, int dayOfMonth) {
-                getResultsFromApi(mCredential, mProgress, mOutputText, new Date(view.getDate()));
+                Calendar c = Calendar.getInstance();
+                c.set(year, month, dayOfMonth);
+                getResultsFromApi(mCredential, mProgress, mOutputText, c.getTime());
+                Log.d("check_dayselect", c.toString());
             }
         });
 
@@ -95,21 +95,12 @@ public class CalendarActivity extends Activity
         getResultsFromApi(mCredential, mProgress, mOutputText, null);
     }
 
-    /**
-     * Attempt to call the API, after verifying that all the preconditions are
-     * satisfied. The preconditions are: Google Play Services installed, an
-     * account was selected and the device currently has online access. If any
-     * of the preconditions are not satisfied, the app will prompt the user as
-     * appropriate.
-     */
+//use account and date information to call the Calendar api
     public void getResultsFromApi(GoogleAccountCredential credentials,
                                   ProgressDialog dialog,
                                   TextView textView,
                                   Date daySelected) {
-//        if (! isGooglePlayServicesAvailable()) {
-//            acquireGooglePlayServices();
-//        } else
-//
+//handle if your account isn't selected
         if (credentials.getSelectedAccountName() == null) {
             chooseAccount(credentials);
         } else if (! isDeviceOnline()) {
@@ -119,16 +110,7 @@ public class CalendarActivity extends Activity
         }
     }
 
-    /**
-     * Attempts to set the account used with the API credentials. If an account
-     * name was previously saved it will use that one; otherwise an account
-     * picker dialog will be shown to the user. Note that the setting the
-     * account to use with the credentials object requires the app to have the
-     * GET_ACCOUNTS permission, which is requested here if it is not already
-     * present. The AfterPermissionGranted annotation indicates that this
-     * function will be rerun automatically whenever the GET_ACCOUNTS permission
-     * is granted.
-     */
+    //select your google account
     @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
     private void chooseAccount(GoogleAccountCredential credential) {
         if (EasyPermissions.hasPermissions(
@@ -154,16 +136,8 @@ public class CalendarActivity extends Activity
         }
     }
 
-    /**
-     * Called when an activity launched here (specifically, AccountPicker
-     * and authorization) exits, giving you the requestCode you started it with,
-     * the resultCode it returned, and any additional data from it.
-     * @param requestCode code indicating which activity result is incoming.
-     * @param resultCode code indicating the result of the incoming
-     *     activity result.
-     * @param data Intent (containing result data) returned by incoming
-     *     activity result.
-     */
+  //Handles appropriate action when activity is launched
+    // ex. google play, google account selection, etc.
     @Override
     protected void onActivityResult(
             int requestCode, int resultCode, Intent data) {
@@ -202,89 +176,11 @@ public class CalendarActivity extends Activity
         }
     }
 
-    /**
-     * Respond to requests for permissions at runtime for API 23 and above.
-     * @param requestCode The request code passed in
-     *     requestPermissions(android.app.Activity, String, int, String[])
-     * @param permissions The requested permissions. Never null.
-     * @param grantResults The grant results for the corresponding permissions
-     *     which is either PERMISSION_GRANTED or PERMISSION_DENIED. Never null.
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        EasyPermissions.onRequestPermissionsResult(
-                requestCode, permissions, grantResults, this);
-    }
-
-    /**
-     * Callback for when a permission is granted using the EasyPermissions
-     * library.
-     * @param requestCode The request code associated with the requested
-     *         permission
-     * @param list The requested permission list. Never null.
-     */
-    @Override
-    public void onPermissionsGranted(int requestCode, List<String> list) {
-        // Do nothing.
-    }
-
-    /**
-     * Callback for when a permission is denied using the EasyPermissions
-     * library.
-     * @param requestCode The request code associated with the requested
-     *         permission
-     * @param list The requested permission list. Never null.
-     */
-    @Override
-    public void onPermissionsDenied(int requestCode, List<String> list) {
-        // Do nothing.
-    }
-
-    /**
-     * Checks whether the device currently has a network connection.
-     * @return true if the device has a network connection, false otherwise.
-     */
-    private boolean isDeviceOnline() {
-        ConnectivityManager connMgr =
-                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-        return (networkInfo != null && networkInfo.isConnected());
-    }
-
-    /**
-     * Check that Google Play services APK is installed and up to date.
-     * @return true if Google Play Services is available and up to
-     *     date on this device; false otherwise.
-//     */
-//    private boolean isGooglePlayServicesAvailable() {
-//        GoogleApiAvailability apiAvailability =
-//                GoogleApiAvailability.getInstance();
-//        final int connectionStatusCode =
-//                apiAvailability.isGooglePlayServicesAvailable(this);
-//        return connectionStatusCode == ConnectionResult.SUCCESS;
-//    }
-//
-//    /**
-//     * Attempt to resolve a missing, out-of-date, invalid or disabled Google
-//     * Play Services installation via a user dialog, if possible.
-//     */
-//    private static void acquireGooglePlayServices() {
-//        GoogleApiAvailability apiAvailability =
-//                GoogleApiAvailability.getInstance();
-//        final int connectionStatusCode =
-//                apiAvailability.isGooglePlayServicesAvailable(this);
-//        if (apiAvailability.isUserResolvableError(connectionStatusCode)) {
-//            //out of date
-//        }
-//    }
 
 
-    /**
-     * An asynchronous task that handles the Google Calendar API call.
-     */
+
+
+    // asynchronous task that handles the Google Calendar API call.
     public static class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
         private com.google.api.services.calendar.Calendar mService = null;
         private Exception mLastError = null;
@@ -300,8 +196,11 @@ public class CalendarActivity extends Activity
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
             JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
             if (daySelected != null) {
+                Log.d("check_dayselect", daySelected.toString());
                 daySelect = daySelected;
                 selectedDate = new DateTime(new Date(daySelected.getYear(), daySelected.getMonth(), daySelected.getDate()));
+            } else {
+                Log.d("check_daySelected", "daySelected is null");
             }
             mService = new com.google.api.services.calendar.Calendar.Builder(
                     transport, jsonFactory, credential)
@@ -311,9 +210,9 @@ public class CalendarActivity extends Activity
             mOutputText = textView;
         }
 
-        /**
-         * Background task to call Google Calendar API.
-         */
+
+         //Background task to call Google Calendar API.
+
         @Override
         protected List<String> doInBackground(Void... params) {
             try {
@@ -325,10 +224,7 @@ public class CalendarActivity extends Activity
             }
         }
 
-        /**
-         * Fetch a list of the next 10 events from the primary calendar.
-         * @return List of Strings describing returned events.
-         */
+        // Fetch a list of the next 10 events from the primary calendar.
         private List<String> getDataFromApi() throws IOException {
             //check if we clicked on a date, or we should use the current time to get events
             //for the next 24 hrs
@@ -336,6 +232,7 @@ public class CalendarActivity extends Activity
             DateTime tomorrow = null;
             if (selectedDate == null) {
                 //daySelect = new Date(d.getYear(), d.getMonth(), d.getDate());
+
                 daySelect = new Date(d.getTime());
                 selectedDate = new DateTime(daySelect);//selectedDayInMillis);
                 tomorrow = new DateTime(d.getTime()+86400000);
@@ -389,36 +286,85 @@ public class CalendarActivity extends Activity
             mProgress.show();
         }
 
+        //display events in text view
         @Override
         protected void onPostExecute(List<String> output) {
             mProgress.dismiss();
             if (output == null || output.size() == 0) {
-                mOutputText.setText("No results returned.");
+                mOutputText.setText("No events scheduled.");
             } else {
                 output.add(0, "Upcoming Events:");
                 mOutputText.setText(TextUtils.join("\n", output));
             }
         }
 
+
+        //display any errors that caused calendar request to be cancelled
         @Override
         protected void onCancelled() {
             mProgress.dismiss();
             if (mLastError != null) {
-                if (mLastError instanceof GooglePlayServicesAvailabilityIOException) {
-//                    showGooglePlayServicesAvailabilityErrorDialog(
-//                            ((GooglePlayServicesAvailabilityIOException) mLastError)
-//                                    .getConnectionStatusCode());
-                } else if (mLastError instanceof UserRecoverableAuthIOException) {
-//                    startActivityForResult(
-//                            ((UserRecoverableAuthIOException) mLastError).getIntent(),
-//                            CalendarActivity.REQUEST_AUTHORIZATION);
-                } else {
-                    mOutputText.setText("The following error occurred:\n"
-                            + mLastError.getMessage());
-                }
+                mOutputText.setText("The following error occurred:\n"
+                        + mLastError.getMessage());
             } else {
                 mOutputText.setText("Request cancelled.");
             }
         }
     }
+
+
+    //given code from Google API listed below
+
+    /**
+     * Respond to requests for permissions at runtime for API 23 and above.
+     * @param requestCode The request code passed in
+     *     requestPermissions(android.app.Activity, String, int, String[])
+     * @param permissions The requested permissions. Never null.
+     * @param grantResults The grant results for the corresponding permissions
+     *     which is either PERMISSION_GRANTED or PERMISSION_DENIED. Never null.
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        EasyPermissions.onRequestPermissionsResult(
+                requestCode, permissions, grantResults, this);
+    }
+
+    /**
+     * Callback for when a permission is granted using the EasyPermissions
+     * library.
+     * @param requestCode The request code associated with the requested
+     *         permission
+     * @param list The requested permission list. Never null.
+     */
+    @Override
+    public void onPermissionsGranted(int requestCode, List<String> list) {
+        // Do nothing.
+    }
+
+    /**
+     * Callback for when a permission is denied using the EasyPermissions
+     * library.
+     * @param requestCode The request code associated with the requested
+     *         permission
+     * @param list The requested permission list. Never null.
+     */
+    @Override
+    public void onPermissionsDenied(int requestCode, List<String> list) {
+        // Do nothing.
+    }
+
+    /**
+     * Checks whether the device currently has a network connection.
+     * @return true if the device has a network connection, false otherwise.
+     */
+    private boolean isDeviceOnline() {
+        ConnectivityManager connMgr =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        return (networkInfo != null && networkInfo.isConnected());
+    }
+
 }
