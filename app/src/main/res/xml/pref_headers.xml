@@ -4,17 +4,17 @@
 
     <header
         android:fragment="com.nolanmeeks.iris_morningassistant.SettingsActivity$GeneralPreferenceFragment"
-        android:icon="@drawable/ic_info_black_24dp"
+        android:icon="@drawable/ic_cloud_black_24dp"
         android:title="@string/pref_header_general" />
 
     <header
         android:fragment="com.nolanmeeks.iris_morningassistant.SettingsActivity$NotificationPreferenceFragment"
-        android:icon="@drawable/ic_notifications_black_24dp"
+        android:icon="@drawable/ic_access_alarm_black_24dp"
         android:title="@string/pref_header_notifications" />
 
     <header
         android:fragment="com.nolanmeeks.iris_morningassistant.SettingsActivity$DataSyncPreferenceFragment"
-        android:icon="@drawable/ic_sync_black_24dp"
+        android:icon="@drawable/ic_event_black_24dp"
         android:title="@string/pref_header_data_sync" />
 
 </preference-headers>
