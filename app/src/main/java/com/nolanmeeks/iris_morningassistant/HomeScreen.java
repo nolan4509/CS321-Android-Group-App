@@ -150,6 +150,7 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         hide_fab_3 = AnimationUtils.loadAnimation(getApplication(), R.anim.fab3_hide);
         rotate_fab = AnimationUtils.loadAnimation(getApplication(), R.anim.fab_rotate);
 
+        //When you click on the FAB, should say "Expanding Floating Action Button", when you click on it again, it should say "Contracting Floating Action Button"
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -158,36 +159,41 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
                     //Display FAB menu
                     expandFAB();
                     FAB_Status = true;
+                    Toast.makeText(getApplication(), "Expanding Floating Action Button", Toast.LENGTH_SHORT).show();
                 } else {
                     //Close FAB menu
                     hideFAB();
                     FAB_Status = false;
+                    Toast.makeText(getApplication(), "Contracting Floating Action Button", Toast.LENGTH_SHORT).show();
                 }
             }
         });
 
+        //When you click on the New Alarm button, should say "Create Alarm Button Clicked"
         fab1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplication(), "Floating Action Button 1", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplication(), "Create Alarm Button Clicked", Toast.LENGTH_SHORT).show();
                 Intent newAlarm = new Intent(HomeScreen.this, AlarmActivity.class);
                 startActivity(newAlarm);
             }
         });
 
+        //When you click on the New Event button, should say "Create Event Button Clicked"
         fab2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplication(), "Floating Action Button 2", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplication(), "Create Event Button Clicked", Toast.LENGTH_SHORT).show();
                 Intent newCalEvent = new Intent(HomeScreen.this, newCalEvent.class);
                 startActivity(newCalEvent);
             }
         });
 
+        //When you click on the Settings button, should say "Settings Button Clicked"
         fab3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplication(), "Floating Action Button 3", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplication(), "Settings Button Clicked", Toast.LENGTH_SHORT).show();
                 Intent settings = new Intent(HomeScreen.this, SettingsActivity.class);
                 startActivity(settings);
             }
@@ -198,15 +204,19 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
         switch(clicked.getId()){
 
             // Start Weather Activity
+            // When you click on the Weather Button, should say "Weather Button Clicked"
             case R.id.WeatherButton:
                 Intent weatherIntent = new Intent(HomeScreen.this, WeatherActivity.class);
                 startActivity(weatherIntent);
+                Toast.makeText(getApplication(), "Weather Button Clicked", Toast.LENGTH_SHORT).show();
                 break;
 
             // Start Calendar Activity
+            // When you click on the Calendar button, should say "Calendar Button Clicked"
             case R.id.CalendarButton:
                 Intent calendarIntent = new Intent(HomeScreen.this, CalendarActivity.class);
                 startActivity(calendarIntent);
+                Toast.makeText(getApplication(), "Calendar Button Clicked", Toast.LENGTH_SHORT).show();
                 break;
             default:
 
@@ -351,6 +361,7 @@ public class HomeScreen extends AppCompatActivity implements View.OnClickListene
                 Intent next = new Intent(HomeScreen.this,AlarmActivity.class);
                 next.putExtra("id", v.getId()/100);
                 startActivity(next);
+                Toast.makeText(getApplication(), "Alarm Button Clicked", Toast.LENGTH_SHORT).show();
             }
         });
 
